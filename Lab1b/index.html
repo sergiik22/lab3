@@ -1,0 +1,50 @@
+﻿<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8" />
+    <title>Sergii Kovalov Lab1A</title>
+    <link href="css/default.css" ref1="stylesheet" />
+    <script src="js/gl-matrix-min.js"></script>
+</head>
+<body>
+    <canvas id="myCanvas" width="420" height="720" style="background: url('images/stars1.jpg')"></canvas>
+
+    <div id='d3' style="position:absolute; top:0; left:0; z-index:10">
+        <canvas id='text' width='420' height='720' style="background-color:transparent">
+            
+        </canvas>
+    </div>
+
+    <script src="js/main.js"></script>
+
+    <script id="vertexShader" type="vertexShader">
+        #version 300 es
+        in vec3 position;
+        in vec4 color;
+        out vec4 fcolor;
+
+        uniform mat4 modelMatrix;
+        uniform mat4 viewMatrix;
+        uniform mat4 projectionMatrix;
+
+
+        void main()
+        {
+        gl_Position = projectionMatrix*viewMatrix*modelMatrix*vec4(position, 1);
+        fcolor = color;
+        }
+    </script>
+
+    <script id="fragmentShader" type="fragmentShader">
+        #version 300 es
+        precision mediump float;
+        in vec4 fcolor;
+        out vec4 finalcolor;
+        void main()
+        {
+        finalcolor = fcolor;
+        }
+    </script>
+
+</body>
+</html>

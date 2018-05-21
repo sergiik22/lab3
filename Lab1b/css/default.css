@@ -1,0 +1,10 @@
+﻿body {
+    margin: 0;
+}
+
+canvas {
+    width: 400vw;
+    height: 800vh;
+    display: block;
+    background-color:black;
+}

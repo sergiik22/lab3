@@ -1,0 +1,3 @@
+Only with one Tetromino. 
+All tetrominos could be created, there are vertices, colors and random numbers in program.
+However I had no time for collision detection with other Tetrominos.
