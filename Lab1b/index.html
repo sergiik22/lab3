@@ -2,9 +2,10 @@
 <html>
 <head>
     <meta charset="utf-8" />
-    <title>Sergii Kovalov Lab1A</title>
+    <title>Sergii Kovalov Lab3</title>
     <link href="css/default.css" ref1="stylesheet" />
     <script src="js/gl-matrix-min.js"></script>
+    <script src="js/webgl-utils.js"></script>
 </head>
 <body>
     <canvas id="myCanvas" width="420" height="720" style="background: url('images/stars1.jpg')"></canvas>
@@ -23,6 +24,7 @@
         in vec4 color;
         out vec4 fcolor;
 
+        uniform mat4 uMatrix;
         uniform mat4 modelMatrix;
         uniform mat4 viewMatrix;
         uniform mat4 projectionMatrix;
@@ -30,7 +32,7 @@
 
         void main()
         {
-        gl_Position = projectionMatrix*viewMatrix*modelMatrix*vec4(position, 1);
+        gl_Position = uMatrix*viewMatrix*modelMatrix*vec4(position, 1);
         fcolor = color;
         }
     </script>

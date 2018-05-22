@@ -53,12 +53,25 @@ var camera = { position: vec3.fromValues(0, 0, 0), direction: vec3.fromValues(0,
 
 
 
+
+
 var canvas = document.getElementById("myCanvas");
 gl = canvas.getContext("webgl2");
 var textcanvas = document.getElementById("text");
 var ctx = textcanvas.getContext("2d");
 ctx.font = "30px Arial";
 ctx.fillStyle = "#ffffff";
+
+var m4 = mat4.fromValues(2 / gl.canvas.clientWidth, 0, 0, 0,
+    0, -2 / gl.canvas.clientHeight, 0, 0,
+    0, 0, 0.3, 0,
+    -1, 1, 0, 1, );
+
+/*var m4 = mat4.fromValues(1, 0, 0, 0,
+    0, 1, 0, 0,
+    0, 0, 1, 0,
+    0, 0, 0, 1, );*/
+
 
 
 //Draw score and speed
@@ -194,8 +207,10 @@ function start() {
     var top = 0;
     var near = 400;
     var far = -400;
-    mat4.ortho(projectionMatrix3, left, right, bottom, top, near, far);
-    // mat4.perspective(projectionMatrix3, 45 * Math.PI / 180.0, canvas.width / canvas.height, 400, 0);
+    //mat4.ortho(projectionMatrix3, left, right, bottom, top, near, far);
+
+    mat4.perspective(projectionMatrix3, 45 * Math.PI / 180.0, canvas.width / canvas.height, 0.1, 10);
+   
     //Blocks with current position of tetromino are not availible more
     mainGrid[positionTetromino[0]][positionTetromino[1]][42] = true;
     mainGrid[positionTetromino[2]][positionTetromino[3]][42] = true;
@@ -209,7 +224,7 @@ function start() {
 
 
 //start array for Tetrominos
-var startArray = [gl.canvas.clientWidth / 2, 0, 0];
+var startArray = [gl.canvas.clientWidth/2, 0, -3];
 requestAnimationFrame(runRenderLoop);
 
 function handleKeyDown(event) {
@@ -347,11 +362,13 @@ function runRenderLoop(time = 0) {
     gl.enable(gl.DEPTH_TEST);
 
     gl.useProgram(shaderProgram);
-    var target = vec3.create();
+    
+    /*var target = vec3.create();
     vec3.add(target, camera.position, camera.direction);
-    mat4.lookAt(viewMatrix3, camera.position, target, vec3.fromValues(0, 1, 0));
+    mat4.lookAt(viewMatrix3, camera.position, target, vec3.fromValues(0, 1, 0));*/
 
-
+    gl.viewport(0, 0, gl.canvas.clientWidth, gl.canvas.clientHeight);
+    //gl.enable(gl.CULL_FACE);
 
 
     mat4.identity(modelMatrix);
@@ -368,13 +385,14 @@ function runRenderLoop(time = 0) {
     gl.uniformMatrix4fv(shaderProgram.projectionMatrixLocation3, false, projectionMatrix3);
     gl.uniformMatrix4fv(shaderProgram.viewMatrixLocation3, false, viewMatrix3);
     gl.uniformMatrix4fv(shaderProgram.modelMatrixLocation, false, modelMatrix);
+    gl.uniformMatrix4fv(shaderProgram.uMatrixLocation, false, m4);
 
     gl.drawArrays(gl.TRIANGLES, 0, trquantity);
     //Drawing array
     if (flag) {
 
         mat4.identity(modelMatrix);
-
+        mat4.translate(modelMatrix, modelMatrix, [0, 0, 0]);
         gl.bindBuffer(gl.ARRAY_BUFFER, positionBuffer1);
         gl.vertexAttribPointer(shaderProgram.positionAttributeLocation, 3, gl.FLOAT, false, 0, 0);
 
@@ -384,7 +402,7 @@ function runRenderLoop(time = 0) {
         gl.uniformMatrix4fv(shaderProgram.projectionMatrixLocation3, false, projectionMatrix3);
         gl.uniformMatrix4fv(shaderProgram.viewMatrixLocation3, false, viewMatrix3);
         gl.uniformMatrix4fv(shaderProgram.modelMatrixLocation, false, modelMatrix);
-
+        gl.uniformMatrix4fv(shaderProgram.uMatrixLocation, false, m4);
         gl.drawArrays(gl.TRIANGLES, 0, arraysz);
     }
     requestAnimationFrame(runRenderLoop);
@@ -606,6 +624,7 @@ function createTetromino(arr, sz, cls) {
     shaderProgram.viewMatrixLocation3 = gl.getUniformLocation(shaderProgram, "viewMatrix");
     shaderProgram.projectionMatrixLocation3 = gl.getUniformLocation(shaderProgram, "projectionMatrix");
     shaderProgram.modelMatrixLocation = gl.getUniformLocation(shaderProgram, "modelMatrix");
+    shaderProgram.uMatrixLocation = gl.getUniformLocation(shaderProgram, "uMatrix");
 
     return tetromino;
 }
@@ -614,284 +633,285 @@ var bs = 30;
 //            _ _ _ _
 //main array [_|_|_|_]
 //           [_|_|_|_]
+var centerMainArr = gl.canvas.clientWidth / 2;
 var mainArr = [
     //1st front
     //1st block 0-17
-    0, 0, 0,
-    0, bs, 0,
-    bs, 0, 0,
-    bs, 0, 0,
-    0, bs, 0,
-    bs, bs, 0,
+    0 , 0, 0,
+    0 , bs, 0,
+    bs , 0, 0,
+    bs , 0, 0,
+    0 , bs, 0,
+    bs , bs, 0,
     //2nd block 18-35
-    bs, 0, 0,
-    bs, bs, 0,
-    2 * bs, 0, 0,
-    2 * bs, 0, 0,
-    bs, bs, 0,
-    2 * bs, bs, 0,
+    bs , 0, 0,
+    bs , bs, 0,
+    2 * bs , 0, 0,
+    2 * bs , 0, 0,
+    bs , bs , 0,
+    2 * bs , bs, 0,
     //3rd block 36-53
-    2 * bs, 0, 0,
-    2 * bs, bs, 0,
-    3 * bs, 0, 0,
-    3 * bs, 0, 0,
-    2 * bs, bs, 0,
-    3 * bs, bs, 0,
+    2 * bs , 0, 0,
+    2 * bs , bs, 0,
+    3 * bs , 0, 0,
+    3 * bs , 0, 0,
+    2 * bs , bs, 0,
+    3 * bs , bs, 0,
     //4th block 54-71
-    3 * bs, 0, 0,
-    3 * bs, bs, 0,
-    4 * bs, 0, 0,
-    4 * bs, 0, 0,
-    3 * bs, bs, 0,
-    4 * bs, bs, 0,
+    3 * bs , 0, 0,
+    3 * bs , bs, 0,
+    4 * bs , 0, 0,
+    4 * bs , 0, 0,
+    3 * bs , bs, 0,
+    4 * bs , bs, 0,
     //2nd front
     //1st block 72-89
-    0, bs, 0,
-    0, 2 * bs, 0,
-    bs, bs, 0,
-    bs, bs, 0,
-    0, 2 * bs, 0,
-    bs, 2 * bs, 0,
+    0 , bs, 0,
+    0 , 2 * bs, 0,
+    bs , bs, 0,
+    bs , bs, 0,
+    0 , 2 * bs, 0,
+    bs , 2 * bs, 0,
     //2nd block 90-107
-    bs, bs, 0,
-    bs, 2 * bs, 0,
-    2 * bs, bs, 0,
-    2 * bs, bs, 0,
-    bs, 2 * bs, 0,
-    2 * bs, 2 * bs, 0,
+    bs , bs, 0,
+    bs , 2 * bs, 0,
+    2 * bs , bs, 0,
+    2 * bs , bs, 0,
+    bs , 2 * bs, 0,
+    2 * bs , 2 * bs, 0,
     //3rd block 108-125
-    2 * bs, bs, 0,
-    2 * bs, 2 * bs, 0,
-    3 * bs, bs, 0,
-    3 * bs, bs, 0,
-    2 * bs, 2 * bs, 0,
-    3 * bs, 2 * bs, 0,
+    2 * bs , bs, 0,
+    2 * bs , 2 * bs, 0,
+    3 * bs , bs, 0,
+    3 * bs , bs, 0,
+    2 * bs , 2 * bs, 0,
+    3 * bs , 2 * bs, 0,
     //4th block 126-143
-    3 * bs, bs, 0,
-    3 * bs, 2 * bs, 0,
-    4 * bs, bs, 0,
-    4 * bs, bs, 0,
-    3 * bs, 2 * bs, 0,
-    4 * bs, 2 * bs, 0,
+    3 * bs , bs, 0,
+    3 * bs , 2 * bs, 0,
+    4 * bs , bs, 0,
+    4 * bs , bs, 0,
+    3 * bs , 2 * bs, 0,
+    4 * bs , 2 * bs, 0,
     /////////////////////////////////////////////
     //1st back
     //1st block 144-161
-    0, 0, -bs,
-    0, bs, -bs,
-    bs, 0, -bs,
-    bs, 0, -bs,
-    0, bs, -bs,
-    bs, bs, -bs,
+    0 , 0, -0.5,
+    0 , bs, -0.5,
+    bs , 0, -0.5,
+    bs , 0, -0.5,
+    0 , bs, -0.5,
+    bs , bs, -0.5,
     //2nd block 162-179
-    bs, 0, -bs,
-    bs, bs, -bs,
-    2 * bs, 0, -bs,
-    2 * bs, 0, -bs,
-    bs, bs, -bs,
-    2 * bs, bs, -bs,
+    bs , 0, -0.5,
+    bs , bs, -0.5,
+    2 * bs , 0, -0.5,
+    2 * bs , 0, -0.5,
+    bs , bs , -0.5,
+    2 * bs , bs, -0.5,
     //3rd block 180-197
-    2 * bs, 0, -bs,
-    2 * bs, bs, -bs,
-    3 * bs, 0, -bs,
-    3 * bs, 0, -bs,
-    2 * bs, bs, -bs,
-    3 * bs, bs, -bs,
+    2 * bs , 0, -0.5,
+    2 * bs , bs, -0.5,
+    3 * bs , 0, -0.5,
+    3 * bs , 0, -0.5,
+    2 * bs , bs, -0.5,
+    3 * bs , bs, -0.5,
     //4th block 198-215
-    3 * bs, 0, -bs,
-    3 * bs, bs, -bs,
-    4 * bs, 0, -bs,
-    4 * bs, 0, -bs,
-    3 * bs, bs, -bs,
-    4 * bs, bs, -bs,
+    3 * bs , 0, -0.5,
+    3 * bs , bs, -0.5,
+    4 * bs , 0, -0.5,
+    4 * bs , 0, -0.5,
+    3 * bs , bs, -0.5,
+    4 * bs , bs, -0.5,
     //2nd back
     //1st block 216-233
-    0, bs, -bs,
-    0, 2 * bs, -bs,
-    bs, bs, -bs,
-    bs, bs, -bs,
-    0, 2 * bs, -bs,
-    bs, 2 * bs, -bs,
+    0 , bs, -0.5,
+    0 , 2 * bs, -0.5,
+    bs , bs, -0.5,
+    bs , bs, -0.5,
+    0 , 2 * bs, -0.5,
+    bs , 2 * bs, -0.5,
     //2nd block 234-251
-    bs, bs, -bs,
-    bs, 2 * bs, -bs,
-    2 * bs, bs, -bs,
-    2 * bs, bs, -bs,
-    bs, 2 * bs, -bs,
-    2 * bs, 2 * bs, -bs,
+    bs , bs, -0.5,
+    bs , 2 * bs, -0.5,
+    2 * bs , bs, -0.5,
+    2 * bs , bs, -0.5,
+    bs , 2 * bs, -0.5,
+    2 * bs , 2 * bs, -0.5,
     //3rd block 252-269
-    2 * bs, bs, -bs,
-    2 * bs, 2 * bs, -bs,
-    3 * bs, bs, -bs,
-    3 * bs, bs, -bs,
-    2 * bs, 2 * bs, -bs,
-    3 * bs, 2 * bs, -bs,
+    2 * bs , bs, -0.5,
+    2 * bs , 2 * bs, -0.5,
+    3 * bs , bs, -0.5,
+    3 * bs , bs, -0.5,
+    2 * bs , 2 * bs, -0.5,
+    3 * bs , 2 * bs, -0.5,
     //4th block 270-287
-    3 * bs, bs, -bs,
-    3 * bs, 2 * bs, -bs,
-    4 * bs, bs, -bs,
-    4 * bs, bs, -bs,
-    3 * bs, 2 * bs, -bs,
-    4 * bs, 2 * bs, -bs,
+    3 * bs , bs, -0.5,
+    3 * bs , 2 * bs, -0.5,
+    4 * bs , bs, -0.5,
+    4 * bs , bs, -0.5,
+    3 * bs , 2 * bs, -0.5,
+    4 * bs , 2 * bs, -0.5,
     /////////////////////////////////////////////
     // Top
     // 1st Block 288-305
-    0, 0, 0,
-    bs, 0, 0,
-    0, 0, -bs,
-    0, 0, -bs,
-    bs, 0, 0,
-    bs, 0, -bs,
+    0 , 0, 0,
+    bs , 0, 0,
+    0 , 0, -0.5,
+    0 , 0, -0.5,
+    bs , 0, 0,
+    bs , 0, -0.5,
     // 2nd Block 306-323
-    bs, 0, 0,
-    2 * bs, 0, 0,
-    bs, 0, -bs,
-    bs, 0, -bs,
-    2 * bs, 0, 0,
-    2 * bs, 0, -bs,
+    bs , 0, 0,
+    2 * bs , 0, 0,
+    bs , 0, -0.5,
+    bs , 0, -0.5,
+    2 * bs , 0, 0,
+    2 * bs , 0, -0.5,
     // 3rd Block 324-341
-    2 * bs, 0, 0,
-    3 * bs, 0, 0,
-    2 * bs, 0, -bs,
-    2 * bs, 0, -bs,
-    3 * bs, 0, 0,
-    3 * bs, 0, -bs,
+    2 * bs , 0, 0,
+    3 * bs , 0, 0,
+    2 * bs , 0, -0.5,
+    2 * bs , 0, -0.5,
+    3 * bs , 0, 0,
+    3 * bs , 0, -0.5,
     //4th Block 342-359
-    3 * bs, 0, 0,
-    4 * bs, 0, 0,
-    3 * bs, 0, -bs,
-    3 * bs, 0, -bs,
-    4 * bs, 0, 0,
-    4 * bs, 0, -bs,
+    3 * bs , 0, 0,
+    4 * bs , 0, 0,
+    3 * bs , 0, -0.5,
+    3 * bs , 0, -0.5,
+    4 * bs , 0, 0,
+    4 * bs , 0, -0.5,
     // 1st - 2nd 
     // 1st Block 360-377
-    0, bs, 0,
-    bs, bs, 0,
-    0, bs, -bs,
-    0, bs, -bs,
-    bs, bs, 0,
-    bs, bs, -bs,
+    0 , bs, 0,
+    bs , bs, 0,
+    0 , bs, -0.5,
+    0 , bs, -0.5,
+    bs , bs, 0,
+    bs , bs, -0.5,
     // 2nd Block 378-395
-    bs, bs, 0,
-    2 * bs, bs, 0,
-    bs, bs, -bs,
-    bs, bs, -bs,
-    2 * bs, bs, 0,
-    2 * bs, bs, -bs,
+    bs , bs, 0,
+    2 * bs , bs, 0,
+    bs , bs, -0.5,
+    bs , bs, -0.5,
+    2 * bs , bs, 0,
+    2 * bs , bs, -0.5,
     // 3rd Block 396-413
-    2 * bs, bs, 0,
-    3 * bs, bs, 0,
-    2 * bs, bs, -bs,
-    2 * bs, bs, -bs,
-    3 * bs, bs, 0,
-    3 * bs, bs, -bs,
+    2 * bs , bs, 0,
+    3 * bs , bs, 0,
+    2 * bs , bs, -0.5,
+    2 * bs , bs, -0.5,
+    3 * bs , bs, 0,
+    3 * bs , bs, -0.5,
     //4th Block 414-431
-    3 * bs, bs, 0,
-    4 * bs, bs, 0,
-    3 * bs, bs, -bs,
-    3 * bs, bs, -bs,
-    4 * bs, bs, 0,
-    4 * bs, bs, -bs,
+    3 * bs , bs, 0,
+    4 * bs , bs, 0,
+    3 * bs , bs, -0.5,
+    3 * bs , bs, -0.5,
+    4 * bs , bs, 0,
+    4 * bs , bs, -0.5,
     // Bottom
     // 1st Block 432-449
-    0, 2 * bs, 0,
-    bs, 2 * bs, 0,
-    0, 2 * bs, -bs,
-    0, 2 * bs, -bs,
-    bs, 2 * bs, 0,
-    bs, 2 * bs, -bs,
+    0 , 2 * bs, 0,
+    bs , 2 * bs, 0,
+    0 , 2 * bs, -0.5,
+    0 , 2 * bs, -0.5,
+    bs , 2 * bs, 0,
+    bs , 2 * bs, -0.5,
     // 2nd Block 450-467
-    bs, 2 * bs, 0,
-    2 * bs, 2 * bs, 0,
-    bs, 2 * bs, -bs,
-    bs, 2 * bs, -bs,
-    2 * bs, 2 * bs, 0,
-    2 * bs, 2 * bs, -bs,
+    bs , 2 * bs, 0,
+    2 * bs , 2 * bs, 0,
+    bs , 2 * bs, -0.5,
+    bs , 2 * bs, -0.5,
+    2 * bs , 2 * bs, 0,
+    2 * bs , 2 * bs, -0.5,
     // 3rd Block 468-485
-    2 * bs, 2 * bs, 0,
-    3 * bs, 2 * bs, 0,
-    2 * bs, 2 * bs, -bs,
-    2 * bs, 2 * bs, -bs,
-    3 * bs, 2 * bs, 0,
-    3 * bs, 2 * bs, -bs,
+    2 * bs , 2 * bs, 0,
+    3 * bs , 2 * bs, 0,
+    2 * bs , 2 * bs, -0.5,
+    2 * bs , 2 * bs, -0.5,
+    3 * bs , 2 * bs, 0,
+    3 * bs , 2 * bs, -0.5,
     //4th Block 486-503
-    3 * bs, 2 * bs, 0,
-    4 * bs, 2 * bs, 0,
-    3 * bs, 2 * bs, -bs,
-    3 * bs, 2 * bs, -bs,
-    4 * bs, 2 * bs, 0,
-    4 * bs, 2 * bs, -bs,
+    3 * bs , 2 * bs, 0,
+    4 * bs , 2 * bs, 0,
+    3 * bs , 2 * bs, -0.5,
+    3 * bs , 2 * bs, -0.5,
+    4 * bs , 2 * bs, 0,
+    4 * bs , 2 * bs, -0.5,
     //Sides 1st
     //Left 504-521
-    0, 0, 0,
-    0, bs, 0,
-    0, 0, -bs,
-    0, 0, -bs,
-    0, bs, 0,
-    0, bs, -bs,
+    0 , 0, 0,
+    0 , bs, 0,
+    0 , 0, -0.5,
+    0 , 0, -0.5,
+    0 , bs, 0,
+    0 , bs, -0.5,
     //1st-2nd 522-539
-    bs, 0, 0,
-    bs, bs, 0,
-    bs, 0, -bs,
-    bs, 0, -bs,
-    bs, bs, 0,
-    bs, bs, -bs,
+    bs , 0, 0,
+    bs , bs, 0,
+    bs , 0, -0.5,
+    bs , 0, -0.5,
+    bs , bs, 0,
+    bs , bs, -0.5,
     //2nd-3rd 540-557
-    2 * bs, 0, 0,
-    2 * bs, bs, 0,
-    2 * bs, 0, -bs,
-    2 * bs, 0, -bs,
-    2 * bs, bs, 0,
-    2 * bs, bs, -bs,
+    2 * bs , 0, 0,
+    2 * bs , bs, 0,
+    2 * bs , 0, -0.5,
+    2 * bs , 0, -0.5,
+    2 * bs , bs, 0,
+    2 * bs , bs, -0.5,
     //3rd-4th 558-575
-    3 * bs, 0, 0,
-    3 * bs, bs, 0,
-    3 * bs, 0, -bs,
-    3 * bs, 0, -bs,
-    3 * bs, bs, 0,
-    3 * bs, bs, -bs,
+    3 * bs , 0, 0,
+    3 * bs , bs, 0,
+    3 * bs , 0, -0.5,
+    3 * bs , 0, -0.5,
+    3 * bs , bs, 0,
+    3 * bs , bs, -0.5,
     //right 576-593
-    4 * bs, 0, 0,
-    4 * bs, bs, 0,
-    4 * bs, 0, -bs,
-    4 * bs, 0, -bs,
-    4 * bs, bs, 0,
-    4 * bs, bs, -bs,
+    4 * bs , 0, 0,
+    4 * bs , bs, 0,
+    4 * bs , 0, -0.5,
+    4 * bs , 0, -0.5,
+    4 * bs , bs, 0,
+    4 * bs , bs, -0.5,
     //Sides 2st
     //Left 594-611
-    0, bs, 0,
-    0, 2 * bs, 0,
-    0, bs, -bs,
-    0, bs, -bs,
-    0, 2 * bs, 0,
-    0, 2 * bs, -bs,
+    0 , bs, 0,
+    0 , 2 * bs, 0,
+    0 , bs, -0.5,
+    0 , bs, -0.5,
+    0 , 2 * bs, 0,
+    0 , 2 * bs, -0.5,
     //1st-2nd 612-629
-    bs, bs, 0,
-    bs, 2 * bs, 0,
-    bs, bs, -bs,
-    bs, bs, -bs,
-    bs, 2 * bs, 0,
-    bs, 2 * bs, -bs,
+    bs , bs, 0,
+    bs , 2 * bs, 0,
+    bs , bs, -0.5,
+    bs , bs, -0.5,
+    bs , 2 * bs, 0,
+    bs , 2 * bs, -0.5,
     //2nd-3rd 630-647
-    2 * bs, bs, 0,
-    2 * bs, 2 * bs, 0,
-    2 * bs, bs, -bs,
-    2 * bs, bs, -bs,
-    2 * bs, 2 * bs, 0,
-    2 * bs, 2 * bs, -bs,
+    2 * bs , bs, 0,
+    2 * bs , 2 * bs, 0,
+    2 * bs , bs, -0.5,
+    2 * bs , bs, -0.5,
+    2 * bs , 2 * bs, 0,
+    2 * bs , 2 * bs, -0.5,
     //3rd-4th 648-665
-    3 * bs, bs, 0,
-    3 * bs, 2 * bs, 0,
-    3 * bs, bs, -bs,
-    3 * bs, bs, -bs,
-    3 * bs, 2 * bs, 0,
-    3 * bs, 2 * bs, -bs,
+    3 * bs , bs, 0,
+    3 * bs , 2 * bs, 0,
+    3 * bs , bs, -0.5,
+    3 * bs , bs, -0.5,
+    3 * bs , 2 * bs, 0,
+    3 * bs , 2 * bs, -0.5,
     //right 666-683
-    4 * bs, bs, 0,
-    4 * bs, 2 * bs, 0,
-    4 * bs, bs, -bs,
-    4 * bs, bs, -bs,
-    4 * bs, 2 * bs, 0,
-    4 * bs, 2 * bs, -bs
+    4 * bs , bs, 0,
+    4 * bs , 2 * bs, 0,
+    4 * bs , bs, -0.5,
+    4 * bs , bs, -0.5,
+    4 * bs , 2 * bs, 0,
+    4 * bs , 2 * bs, -0.5
 ];
 //            _ _ _ _
 // Tetromino [_|_|_|_] Vertices
