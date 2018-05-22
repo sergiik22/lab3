@@ -48,6 +48,8 @@ var positionTetromino = [];
 var viewMatrix3 = mat4.create();
 var projectionMatrix3 = mat4.create();
 var modelMatrix = mat4.create();
+var camera = { position: vec3.fromValues(0, 0, 0), direction: vec3.fromValues(0, 0, -1) };
+//vec3.add(camera.direction, camera.position, vec3.fromValues(0, 0, -1));
 
 
 
@@ -96,7 +98,7 @@ gravity_enabled = true;
 //Creating a new Tetromino
 function newTetromino() {
     var rand = Math.floor(Math.random() * 7) + 1;
-    //rand = 2;
+    rand = 2;
     switch (rand) {
         case 1:
             var TJ = createTetromino(arrI, 6, colI);
@@ -163,10 +165,10 @@ redrawscore();
 
 function start() {
     //Checking for Gameover
-    for (var i = 0; i < 14; ++i) { 
+    for (var i = 0; i < 14; ++i) {
         if (mainGrid[0][i][42] === true) {
-          gameover = true;
-     }
+            gameover = true;
+        }
     }
     if (gameover) {
         mainGrid = new grid();
@@ -193,7 +195,7 @@ function start() {
     var near = 400;
     var far = -400;
     mat4.ortho(projectionMatrix3, left, right, bottom, top, near, far);
-
+    // mat4.perspective(projectionMatrix3, 45 * Math.PI / 180.0, canvas.width / canvas.height, 400, 0);
     //Blocks with current position of tetromino are not availible more
     mainGrid[positionTetromino[0]][positionTetromino[1]][42] = true;
     mainGrid[positionTetromino[2]][positionTetromino[3]][42] = true;
@@ -256,7 +258,7 @@ function handleKeyDown(event) {
     else if (event.keyCode === 39 || event.keyCode === 68) {
 
         moveright = true;
-         //if not collised changing availibility in array, changing position of tetrominos on the screen, changing 
+        //if not collised changing availibility in array, changing position of tetrominos on the screen, changing 
         //variable moveX for translation
         if (!is_collised(positionTetromino)) {
             moveX += 30;
@@ -289,6 +291,12 @@ function handleKeyDown(event) {
         else {
             drop();
         }
+    }
+    else if (event.keyCode === 107) {
+
+        camera.direction[2] += .1;
+        //camera.target[1] += 10;
+
     }
 }
 //Function for dropping Tetromino
@@ -339,6 +347,13 @@ function runRenderLoop(time = 0) {
     gl.enable(gl.DEPTH_TEST);
 
     gl.useProgram(shaderProgram);
+    var target = vec3.create();
+    vec3.add(target, camera.position, camera.direction);
+    mat4.lookAt(viewMatrix3, camera.position, target, vec3.fromValues(0, 1, 0));
+
+
+
+
     mat4.identity(modelMatrix);
     mat4.translate(modelMatrix, modelMatrix, [moveX + startArray[0], moveY + startArray[1] + centerY, moveZ + startArray[2]]);
     mat4.rotateZ(modelMatrix, modelMatrix, toRadian(angle));
@@ -404,7 +419,7 @@ function is_collised(position) {
                 }
 
             }
-            
+
             if (movedown) {
 
                 if (tempposition[6] + 1 > 23) {
@@ -482,9 +497,9 @@ function clearblocks() {
 
             for (var n = 0; n < 14; ++n) {
                 mainGrid[0][n][42] = false;
-                
+
             }
-            
+
         }
         else { --i; }
     }
@@ -549,12 +564,12 @@ function createTetromino(arr, sz, cls) {
     tetromino.colors = [];
     tetromino.verticesAmmount = sz;
     var colorsBuff = cls;
-    for (var j = 0; j < 6; ++j) {
-        colorsBuff.forEach(function (color) {
-            tetromino.colors = tetromino.colors.concat(color);
-        }
-        );
+    // for (var j = 0; j < 6; ++j) {
+    colorsBuff.forEach(function (color) {
+        tetromino.colors = tetromino.colors.concat(color);
     }
+    );
+    //}
     //Create and Bind color Buffer
     colorBuffer = gl.createBuffer();
     gl.bindBuffer(gl.ARRAY_BUFFER, colorBuffer);
@@ -904,6 +919,7 @@ for (var i = 504; i < 594; ++i) {
 var arrO = [];
 //front for O
 for (var i = 0; i < 36; ++i) {
+    
     arrO.push(mainArr[i]);
 }
 for (var i = 72; i < 108; ++i) {
@@ -1138,6 +1154,21 @@ var arrColors = [
 var colO = [];
 for (var i = 0; i < 20; ++i) {
     colO.push(arrColors[0]);
+}
+for (var i = 20; i < 40; ++i) {
+    colO.push(arrColors[1]);
+}
+for (var i = 40; i < 60; ++i) {
+    colO.push(arrColors[2]);
+}
+for (var i = 60; i < 80; ++i) {
+    colO.push(arrColors[3]);
+}
+for (var i = 80; i < 100; ++i) {
+    colO.push(arrColors[4]);
+}
+for (var i = 100; i < 120; ++i) {
+    colO.push(arrColors[5]);
 }
 var colI = [];
 for (var i = 0; i < 21; ++i) {
