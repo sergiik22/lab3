@@ -28,12 +28,17 @@
         uniform mat4 modelMatrix;
         uniform mat4 viewMatrix;
         uniform mat4 projectionMatrix;
+        uniform float u_fudgeFactor;
 
 
         void main()
         {
-        gl_Position = uMatrix*viewMatrix*modelMatrix*vec4(position, 1);
+
+        vec4 position_temp = uMatrix*viewMatrix*modelMatrix*vec4(position, 1);
+        float zToDivideBy = 1.0 + position_temp.z * u_fudgeFactor;
+        gl_Position = vec4(position_temp.xy / zToDivideBy, position_temp.zw);
         fcolor = color;
+
         }
     </script>
 
