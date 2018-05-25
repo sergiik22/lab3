@@ -48,16 +48,8 @@ var positionTetromino = [];
 var viewMatrix3 = mat4.create();
 var projectionMatrix3 = mat4.create();
 var modelMatrix = mat4.create();
-var camera = { position: vec3.fromValues(0, 0, 0), direction: vec3.fromValues(0, 0, -1) };
-//vec3.add(camera.direction, camera.position, vec3.fromValues(0, 0, -1));
+var camera = { position: vec3.fromValues(0, 0, 0), direction: vec3.fromValues(0, 0, -1), pitch: 0, yaw: -1 * Math.PI/2.0 };
 
-
-var radius = 2;
-var cameraMatrix = mat4.create();
-cameraMatrix = mat4.translate(cameraMatrix, cameraMatrix, [0, 0, 50]);
-cameraMatrix = mat4.rotateY(cameraMatrix, cameraMatrix, toRadian(5));
-
-viewMatrix3 = mat4.invert(viewMatrix3, cameraMatrix);
 
 
 var canvas = document.getElementById("myCanvas");
@@ -67,15 +59,7 @@ var ctx = textcanvas.getContext("2d");
 ctx.font = "30px Arial";
 ctx.fillStyle = "#ffffff";
 
-var m4 = mat4.fromValues(2 / gl.canvas.clientWidth, 0, 0, 0,
-    0, -2 / gl.canvas.clientHeight, 0, 0,
-    0, 0, 0.1, 0,
-    -1, 1, 0, 1, );
 
-/*var m4 = mat4.fromValues(1, 0, 0, 0,
-    0, 1, 0, 0,
-    0, 0, 1, 0,
-    0, 0, 0, 1, );*/
 
 
 
@@ -131,8 +115,8 @@ function newTetromino() {
         case 2:
             var TJ = new createTetromino(arrO, 6, colO);
             trquantity = 120;
-            centerY = 30;
-            centerX = 30;
+            centerY = 1.8;
+            centerX = 0.3;
             tetrominosform = 2;
             for (var i = 0; i < 6; ++i) {
                 tetrominosColor.push(arrColors[0]);
@@ -204,7 +188,7 @@ function start() {
     this.moveY = 0;
     this.angle = 0;
     this.moveZ = 0;
-    this.gravity_enabled = true;
+    //this.gravity_enabled = true;
     //Creating Projection
     var left = 0;
     var right = gl.canvas.clientWidth;
@@ -228,8 +212,8 @@ function start() {
 }
 
 
-//start array for Tetrominos
-var startArray = [gl.canvas.clientWidth/2, 0, 0];
+//start array for Tetromi.nos
+var startArray = [0, 0, -8.7];
 requestAnimationFrame(runRenderLoop);
 
 function handleKeyDown(event) {
@@ -260,7 +244,7 @@ function handleKeyDown(event) {
         //if not collised changing availibility in array, changing position of tetrominos on the screen, changing 
         //variable moveX for translation
         if (!is_collised(positionTetromino)) {
-            moveX += -30;
+            moveX += -0.3;
 
             mainGrid[positionTetromino[6]][positionTetromino[7]][42] = false;
             mainGrid[positionTetromino[2]][positionTetromino[3]][42] = false;
@@ -281,7 +265,7 @@ function handleKeyDown(event) {
         //if not collised changing availibility in array, changing position of tetrominos on the screen, changing 
         //variable moveX for translation
         if (!is_collised(positionTetromino)) {
-            moveX += 30;
+            moveX += 0.3;
 
             mainGrid[positionTetromino[0]][positionTetromino[1]][42] = false;
             mainGrid[positionTetromino[4]][positionTetromino[5]][42] = false;
@@ -314,8 +298,55 @@ function handleKeyDown(event) {
     }
     else if (event.keyCode === 107) {
 
-        camera.direction[2] += .1;
-        //camera.target[1] += 10;
+        //camera.position[2] -= .1;  
+        var moveDirection = vec3.create();
+        vec3.scale(moveDirection, camera.direction, 0.1);
+        vec3.add(camera.position, camera.position, moveDirection);
+    }
+
+    else if (event.key === '-') {
+
+        //camera.position[2] += .1; 
+        var moveDirection = vec3.create();
+        vec3.scale(moveDirection, camera.direction,  -0.1);
+        vec3.add(camera.position, camera.position, moveDirection);
+
+    }
+
+    else if (event.key === 'j') {
+        
+        camera.yaw += .02;
+        camera.direction[0] = Math.cos(camera.pitch) * Math.cos(camera.yaw);
+        camera.direction[1] = Math.sin(camera.pitch);
+        camera.direction[2] = Math.cos(camera.pitch) * Math.sin(camera.yaw);
+
+    }
+
+    else if (event.key === 'l') {
+        
+        camera.yaw -= .02;
+        camera.direction[0] = Math.cos(camera.pitch) * Math.cos(camera.yaw);
+        camera.direction[1] = Math.sin(camera.pitch);
+        camera.direction[2] = Math.cos(camera.pitch) * Math.sin(camera.yaw);
+
+    }
+
+
+    else if (event.key === 'i') {
+
+        camera.pitch += .02;
+        camera.direction[0] = Math.cos(camera.pitch) * Math.cos(camera.yaw);
+        camera.direction[1] = Math.sin(camera.pitch);
+        camera.direction[2] = Math.cos(camera.pitch) * Math.sin(camera.yaw);
+
+    }
+
+    else if (event.key === 'k') {
+
+        camera.pitch -= .02;
+        camera.direction[0] = Math.cos(camera.pitch) * Math.cos(camera.yaw);
+        camera.direction[1] = Math.sin(camera.pitch);
+        camera.direction[2] = Math.cos(camera.pitch) * Math.sin(camera.yaw);
 
     }
 }
@@ -367,19 +398,21 @@ function runRenderLoop(time = 0) {
     gl.enable(gl.DEPTH_TEST);
 
     gl.useProgram(shaderProgram);
-    
-    /*var target = vec3.create();
+
+    var target = vec3.create();
     vec3.add(target, camera.position, camera.direction);
-    mat4.lookAt(viewMatrix3, camera.position, target, vec3.fromValues(0, 1, 0));*/
+    mat4.lookAt(viewMatrix3, camera.position, target, vec3.fromValues(0, 1, 0));
+    
+  
 
     gl.viewport(0, 0, gl.canvas.clientWidth, gl.canvas.clientHeight);
     //gl.enable(gl.CULL_FACE);
 
-
+    mat4.perspective(projectionMatrix3, 45 * Math.PI / 180.0, canvas.width / canvas.height, 0.1, 1000);
     mat4.identity(modelMatrix);
     mat4.translate(modelMatrix, modelMatrix, [moveX + startArray[0], moveY + startArray[1] + centerY, moveZ + startArray[2]]);
     mat4.rotateY(modelMatrix, modelMatrix, toRadian(angle));
-    mat4.translate(modelMatrix, modelMatrix, [-centerX, -centerY, 0]);
+    mat4.translate(modelMatrix, modelMatrix, [centerX, centerY, 0]);
 
     gl.bindBuffer(gl.ARRAY_BUFFER, positionBuffer);
     gl.vertexAttribPointer(shaderProgram.positionAttributeLocation, 3, gl.FLOAT, false, 0, 0);
@@ -390,13 +423,18 @@ function runRenderLoop(time = 0) {
     gl.uniformMatrix4fv(shaderProgram.projectionMatrixLocation3, false, projectionMatrix3);
     gl.uniformMatrix4fv(shaderProgram.viewMatrixLocation3, false, viewMatrix3);
     gl.uniformMatrix4fv(shaderProgram.modelMatrixLocation, false, modelMatrix);
-    gl.uniformMatrix4fv(shaderProgram.uMatrixLocation, false, m4);
-    gl.uniform1f(shaderProgram.u_fudgeFactorLocation, 0.01);
+   
 
     gl.drawArrays(gl.TRIANGLES, 0, trquantity);
     //Drawing array
     if (flag) {
-
+        var left = 0;
+        var right = gl.canvas.clientWidth;
+        var bottom = gl.canvas.clientHeight;
+        var top = 0;
+        var near = 400;
+        var far = -400;
+        mat4.ortho(projectionMatrix3, left, right, bottom, top, near, far);
         mat4.identity(modelMatrix);
         mat4.translate(modelMatrix, modelMatrix, [0, 0, 0]);
         gl.bindBuffer(gl.ARRAY_BUFFER, positionBuffer1);
@@ -408,9 +446,7 @@ function runRenderLoop(time = 0) {
         gl.uniformMatrix4fv(shaderProgram.projectionMatrixLocation3, false, projectionMatrix3);
         gl.uniformMatrix4fv(shaderProgram.viewMatrixLocation3, false, viewMatrix3);
         gl.uniformMatrix4fv(shaderProgram.modelMatrixLocation, false, modelMatrix);
-        gl.uniformMatrix4fv(shaderProgram.uMatrixLocation, false, m4);
       
-        gl.uniform1f(shaderProgram.u_fudgeFactorLocation, 0.2);
         gl.drawArrays(gl.TRIANGLES, 0, arraysz);
     }
     requestAnimationFrame(runRenderLoop);
@@ -476,7 +512,7 @@ function move_down() {
     movedown = true;
     if (!is_collised(positionTetromino)) {
 
-        moveY += 30;
+        moveY -= 0.3;
         mainGrid[positionTetromino[0]][positionTetromino[1]][42] = false;
         mainGrid[positionTetromino[2]][positionTetromino[3]][42] = false;
         positionTetromino[0]++;
@@ -634,8 +670,7 @@ function createTetromino(arr, sz, cls) {
     shaderProgram.viewMatrixLocation3 = gl.getUniformLocation(shaderProgram, "viewMatrix");
     shaderProgram.projectionMatrixLocation3 = gl.getUniformLocation(shaderProgram, "projectionMatrix");
     shaderProgram.modelMatrixLocation = gl.getUniformLocation(shaderProgram, "modelMatrix");
-    shaderProgram.uMatrixLocation = gl.getUniformLocation(shaderProgram, "uMatrix");
-    shaderProgram.u_fudgeFactorLocation = gl.getUniformLocation(shaderProgram, "u_fudgeFactor");
+   
 
     return tetromino;
 }
@@ -648,281 +683,281 @@ var centerMainArr = gl.canvas.clientWidth / 2;
 var mainArr = [
     //1st front
     //1st block 0-17
-    0 , 0, 0,
-    0 , bs, 0,
-    bs , 0, 0,
-    bs , 0, 0,
-    0 , bs, 0,
-    bs , bs, 0,
+    -0.6 , 0, 0.15,
+    -0.6, -0.3, 0.15,
+    -0.3, 0, 0.15,
+    -0.3, 0, 0.15,
+    -0.6, -0.3, 0.15,
+    -0.3, -0.3, 0.15,
     //2nd block 18-35
-    bs , 0, 0,
-    bs , bs, 0,
-    2 * bs , 0, 0,
-    2 * bs , 0, 0,
-    bs , bs , 0,
-    2 * bs , bs, 0,
+    -0.3, 0, 0.15,
+    -0.3, -0.3, 0.15,                     
+    0, 0, 0.15,                       
+    0, 0, 0.15,
+    -0.3, -0.3, 0.15,
+    0, -0.3, 0.15,
     //3rd block 36-53
-    2 * bs , 0, 0,
-    2 * bs , bs, 0,
-    3 * bs , 0, 0,
-    3 * bs , 0, 0,
-    2 * bs , bs, 0,
-    3 * bs , bs, 0,
+    0, 0, 0.15,
+    0, -0.3, 0.15,
+    0.3, 0, 0.15,
+    0.3, 0, 0.15,
+    0, -0.3, 0.15,
+    0.3, -0.3, 0.15,
     //4th block 54-71
-    3 * bs , 0, 0,
-    3 * bs , bs, 0,
-    4 * bs , 0, 0,
-    4 * bs , 0, 0,
-    3 * bs , bs, 0,
-    4 * bs , bs, 0,
+    0.3, 0, 0.15,
+    0.3, -0.3, 0.15,
+    0.6, 0, 0.15,
+    0.6, 0, 0.15,
+    0.3, -0.3, 0.15,
+    0.6, -0.3, 0.15,
     //2nd front
     //1st block 72-89
-    0 , bs, 0,
-    0 , 2 * bs, 0,
-    bs , bs, 0,
-    bs , bs, 0,
-    0 , 2 * bs, 0,
-    bs , 2 * bs, 0,
+    -0.6, -0.3, 0.15,
+    -0.6, -0.6, 0.15,
+    -0.3, -0.3, 0.15,
+    -0.3, -0.3, 0.15,                 ////3 * bs = 0.3     2 * bs = 0,   bs = -0.3     4 * bs = 0.6  0 = -0.6
+    -0.6, -0.6, 0.15,
+    -0.3, -0.6, 0.15,             
     //2nd block 90-107
-    bs , bs, 0,
-    bs , 2 * bs, 0,
-    2 * bs , bs, 0,
-    2 * bs , bs, 0,
-    bs , 2 * bs, 0,
-    2 * bs , 2 * bs, 0,
+    -0.3, -0.3, 0.15,
+    -0.3, -0.6, 0.15,
+    0, -0.3, 0.15,
+    0, -0.3, 0.15,
+    -0.3, -0.6, 0.15,
+    0, -0.6, 0.15,
     //3rd block 108-125
-    2 * bs , bs, 0,
-    2 * bs , 2 * bs, 0,
-    3 * bs , bs, 0,
-    3 * bs , bs, 0,
-    2 * bs , 2 * bs, 0,
-    3 * bs , 2 * bs, 0,
+    0, -0.3, 0.15,
+    0, -0.6, 0.15,
+    0.3, -0.3, 0.15,
+    0.3, -0.3, 0.15,
+    0, -0.6, 0.15,
+    0.3, -0.6, 0.15,
     //4th block 126-143
-    3 * bs , bs, 0,
-    3 * bs , 2 * bs, 0,
-    4 * bs , bs, 0,
-    4 * bs , bs, 0,
-    3 * bs , 2 * bs, 0,
-    4 * bs , 2 * bs, 0,
+    0.3, -0.3, 0.15,
+    0.3, -0.6, 0.15,
+    0.6, -0.3, 0.15,
+    0.6, -0.3, 0.15,
+    0.3, -0.6, 0.15,
+    0.6, -0.6, 0.15,
     /////////////////////////////////////////////
     //1st back
     //1st block 144-161
-    0 , 0, bs,
-    0 , bs, bs,
-    bs , 0, bs,
-    bs , 0, bs,
-    0 , bs, bs,
-    bs , bs, bs,
+    -0.6, 0, -0.15,
+    -0.6, -0.3, -0.15,
+    -0.3, 0, -0.15,
+    -0.3, 0, -0.15,
+    -0.6, -0.3, -0.15,
+    -0.3, -0.3, -0.15,
     //2nd block 162-179
-    bs , 0, bs,
-    bs , bs, bs,
-    2 * bs , 0, bs,
-    2 * bs , 0, bs,
-    bs , bs , bs,
-    2 * bs , bs, bs,
+    -0.3, 0, -0.15,
+    -0.3, -0.3, -0.15,
+    0, 0, -0.15,
+    0, 0, -0.15,
+    -0.3, -0.3, -0.15,
+    0, -0.3, -0.15,
     //3rd block 180-197
-    2 * bs , 0, bs,
-    2 * bs , bs, bs,
-    3 * bs , 0, bs,
-    3 * bs , 0, bs,
-    2 * bs , bs, bs,
-    3 * bs , bs, bs,
+    0, 0, -0.15,
+    0, -0.3, -0.15,
+    0.3, 0, -0.15,
+    0.3, 0, -0.15,
+    0, -0.3, -0.15,
+    0.3, -0.3, -0.15,
     //4th block 198-215
-    3 * bs , 0, bs,
-    3 * bs , bs, bs,
-    4 * bs , 0, bs,
-    4 * bs , 0, bs,
-    3 * bs , bs, bs,
-    4 * bs , bs, bs,
+    0.3, 0, -0.15,
+    0.3, -0.3, -0.15,
+    0.6, 0, -0.15,
+    0.6, 0, -0.15,
+    0.3, -0.3, -0.15,
+    0.6, -0.3, -0.15,
     //2nd back
     //1st block 216-233
-    0 , bs, bs,
-    0 , 2 * bs, bs,
-    bs , bs, bs,
-    bs , bs, bs,
-    0 , 2 * bs, bs,
-    bs , 2 * bs, bs,
+    -0.6, -0.3, -0.15,
+    -0.6, -0.6, -0.15,
+    -0.3, -0.3, -0.15,
+    -0.3, -0.3, -0.15,                 
+    -0.6, -0.6, -0.15,
+    -0.3, -0.6, -0.15, 
     //2nd block 234-251
-    bs , bs, bs,
-    bs , 2 * bs, bs,
-    2 * bs , bs, bs,
-    2 * bs , bs, bs,
-    bs , 2 * bs, bs,
-    2 * bs , 2 * bs, bs,
+    -0.3, -0.3, -0.15,
+    -0.3, -0.6, -0.15,
+    0, -0.3, -0.15,
+    0, -0.3, -0.15,
+    -0.3, -0.6, -0.15,
+    0, -0.6, -0.15,
     //3rd block 252-269
-    2 * bs , bs, bs,
-    2 * bs , 2 * bs, bs,
-    3 * bs , bs, bs,
-    3 * bs , bs, bs,
-    2 * bs , 2 * bs, bs,
-    3 * bs , 2 * bs, bs,
+    0, -0.3, -0.15,
+    0, -0.6, -0.15,
+    0.3, -0.3, -0.15,
+    0.3, -0.3, -0.15,
+    0, -0.6, -0.15,
+    0.3, -0.6, -0.15,
     //4th block 270-287
-    3 * bs , bs, bs,
-    3 * bs , 2 * bs, bs,
-    4 * bs , bs, bs,
-    4 * bs , bs, bs,
-    3 * bs , 2 * bs, bs,
-    4 * bs , 2 * bs, bs,
+    0.3, -0.3, -0.15,
+    0.3, -0.6, -0.15,
+    0.6, -0.3, -0.15,
+    0.6, -0.3, -0.15,
+    0.3, -0.6, -0.15,
+    0.6, -0.6, -0.15,
     /////////////////////////////////////////////
     // Top
     // 1st Block 288-305
-    0 , 0, 0,
-    bs , 0, 0,
-    0 , 0, bs,
-    0 , 0, bs,
-    bs , 0, 0,
-    bs , 0, bs,
+    -0.6 , 0, 0.15,
+    -0.3 , 0, 0.15,
+    -0.6, 0, -0.15,
+    -0.6, 0, -0.15,
+    -0.3 , 0, 0.15,
+    -0.3, 0, -0.15,
     // 2nd Block 306-323
-    bs , 0, 0,
-    2 * bs , 0, 0,
-    bs , 0, bs,
-    bs , 0, bs,
-    2 * bs , 0, 0,
-    2 * bs , 0, bs,
+    -0.3 , 0, 0.15,
+    0 , 0, 0.15,
+    -0.3, 0, -0.15,
+    -0.3, 0, -0.15,                  ////3 * bs = 0.3     2 * bs = 0,   bs = -0.3     4 * bs = 0.6  0 = -0.6
+    0 , 0, 0.15,
+    0, 0, -0.15,             ////    y: 0 = 0, bs = -0.3,  2 * bs = -0.6
     // 3rd Block 324-341
-    2 * bs , 0, 0,
-    3 * bs , 0, 0,
-    2 * bs , 0, bs,
-    2 * bs , 0, bs,
-    3 * bs , 0, 0,
-    3 * bs , 0, bs,
+    0 , 0, 0.15,
+    0.3 , 0, 0.15,
+    0, 0, -0.15,
+    0, 0, -0.15,
+    0.3 , 0, 0.15,
+    0.3, 0, -0.15,
     //4th Block 342-359
-    3 * bs , 0, 0,
-    4 * bs , 0, 0,
-    3 * bs , 0, bs,
-    3 * bs , 0, bs,
-    4 * bs , 0, 0,
-    4 * bs , 0, bs,
+    0.3 , 0, 0.15,
+    0.6 , 0, 0.15,
+    0.3, 0, -0.15,
+    0.3, 0, -0.15,
+    0.6 , 0, 0.15,
+    0.6, 0, -0.15,
     // 1st - 2nd 
     // 1st Block 360-377
-    0 , bs, 0,
-    bs , bs, 0,
-    0 , bs, bs,
-    0 , bs, bs,
-    bs , bs, 0,
-    bs , bs, bs,
+    -0.6, -0.3, 0.15,
+    -0.3, -0.3, 0.15,
+    -0.6, -0.3, -0.15,
+    -0.6, -0.3, -0.15,
+    -0.3, -0.3, 0.15,
+    -0.3, -0.3, -0.15,
     // 2nd Block 378-395
-    bs , bs, 0,
-    2 * bs , bs, 0,
-    bs , bs, bs,
-    bs , bs, bs,
-    2 * bs , bs, 0,
-    2 * bs , bs, bs,
+    -0.3, -0.3, 0.15,
+    0, -0.3, 0.15,
+    -0.3, -0.3, -0.15,
+    -0.3, -0.3, -0.15,                  ////3 * bs = 0.3     2 * bs = 0,   bs = -0.3     4 * bs = 0.6  0 = -0.6
+    0, -0.3, 0.15,
+    0, -0.3, -0.15, 
     // 3rd Block 396-413
-    2 * bs , bs, 0,
-    3 * bs , bs, 0,
-    2 * bs , bs, bs,
-    2 * bs , bs, bs,
-    3 * bs , bs, 0,
-    3 * bs , bs, bs,
+    0, -0.3, 0.15,
+    0.3, -0.3, 0.15,
+    0, -0.3, -0.15,
+    0, -0.3, -0.15,
+    0.3, -0.3, 0.15,
+    0.3, -0.3, -0.15,
     //4th Block 414-431
-    3 * bs , bs, 0,
-    4 * bs , bs, 0,
-    3 * bs , bs, bs,
-    3 * bs , bs, bs,
-    4 * bs , bs, 0,
-    4 * bs , bs, bs,
+    0.3, -0.3, 0.15,
+    0.6, -0.3, 0.15,
+    0.3, -0.3, -0.15,
+    0.3, -0.3, -0.15,
+    0.6, -0.3, 0.15,
+    0.6, -0.3, -0.15,
     // Bottom
     // 1st Block 432-449
-    0 , 2 * bs, 0,
-    bs , 2 * bs, 0,
-    0 , 2 * bs, bs,
-    0 , 2 * bs, bs,
-    bs , 2 * bs, 0,
-    bs , 2 * bs, bs,
+    -0.6, -0.6, 0.15,
+    -0.3, -0.6, 0.15,
+    -0.6, -0.6, -0.15,
+    -0.6, -0.6, -0.15,
+    -0.3, -0.6, 0.15,
+    -0.3, -0.6, -0.15,
     // 2nd Block 450-467
-    bs , 2 * bs, 0,
-    2 * bs , 2 * bs, 0,
-    bs , 2 * bs, bs,
-    bs , 2 * bs, bs,
-    2 * bs , 2 * bs, 0,
-    2 * bs , 2 * bs, bs,
+    -0.3, -0.6, 0.15,
+    0, -0.6, 0.15,
+    -0.3, -0.6, -0.15,
+    -0.3, -0.6, -0.15,                  ////3 * bs = 0.3     2 * bs = 0,   bs = -0.3     4 * bs = 0.6  0 = -0.6
+    0, -0.6, 0.15,
+    0, -0.6, -0.15, 
     // 3rd Block 468-485
-    2 * bs , 2 * bs, 0,
-    3 * bs , 2 * bs, 0,
-    2 * bs , 2 * bs, bs,
-    2 * bs , 2 * bs, bs,
-    3 * bs , 2 * bs, 0,
-    3 * bs , 2 * bs, bs,
+    0, -0.6, 0.15,
+    0.3, -0.6, 0.15,
+    0, -0.6, -0.15,
+    0, -0.6, -0.15,
+    0.3, -0.6, 0.15,
+    0.3, -0.6, -0.15,
     //4th Block 486-503
-    3 * bs , 2 * bs, 0,
-    4 * bs , 2 * bs, 0,
-    3 * bs , 2 * bs, bs,
-    3 * bs , 2 * bs, bs,
-    4 * bs , 2 * bs, 0,
-    4 * bs , 2 * bs, bs,
+    0.3, -0.6, 0.15,
+    0.6, -0.6, 0.15,
+    0.3, -0.6, -0.15,
+    0.3, -0.6, -0.15,
+    0.6, -0.6, 0.15,
+    0.6, -0.6, -0.15,
     //Sides 1st
     //Left 504-521
-    0 , 0, 0,
-    0 , bs, 0,
-    0 , 0, bs,
-    0 , 0, bs,
-    0 , bs, 0,
-    0 , bs, bs,
+    -0.6 , 0, 0.15,
+    -0.6, -0.3, 0.15,
+    -0.6, 0, -0.15,
+    -0.6, 0, -0.15,
+    -0.6, -0.3, 0.15,
+    -0.6, -0.3, -0.15,
     //1st-2nd 522-539
-    bs , 0, 0,
-    bs , bs, 0,
-    bs , 0, bs,
-    bs , 0, bs,
-    bs , bs, 0,
-    bs , bs, bs,
-    //2nd-3rd 540-557
-    2 * bs , 0, 0,
-    2 * bs , bs, 0,
-    2 * bs , 0, bs,
-    2 * bs , 0, bs,
-    2 * bs , bs, 0,
-    2 * bs , bs, bs,
+    -0.3 , 0, 0.15,
+    -0.3, -0.3, 0.15,
+    -0.3, 0, -0.15,
+    -0.3, 0, -0.15,
+    -0.3, -0.3, 0.15,
+    -0.3, -0.3, -0.15,                        ////3 * bs = 0.3     2 * bs = 0,   bs = -0.3     4 * bs = 0.6  0 = -0.6
+    //2nd-3rd 540-557                   ////    y: 0 = 0, bs = -0.3,  2 * bs = -0.6
+    0 , 0, 0.15,
+    0, -0.3, 0.15,
+    0, 0, -0.15,
+    0, 0, -0.15,
+    0, -0.3, 0.15,
+    0, -0.3, -0.15,
     //3rd-4th 558-575
-    3 * bs , 0, 0,
-    3 * bs , bs, 0,
-    3 * bs , 0, bs,
-    3 * bs , 0, bs,
-    3 * bs , bs, 0,
-    3 * bs , bs, bs,
+    0.3 , 0, 0.15,
+    0.3 , -0.3 , 0.15,
+    0.3, 0, -0.15,
+    0.3, 0, -0.15,
+    0.3, -0.3, 0.15,
+    0.3, -0.3, -0.15,
     //right 576-593
-    4 * bs , 0, 0,
-    4 * bs , bs, 0,
-    4 * bs , 0, bs,
-    4 * bs , 0, bs,
-    4 * bs , bs, 0,
-    4 * bs , bs, bs,
+    0.6 , 0, 0.15,
+    0.6 ,-0.3, 0.15,
+    0.6, 0, -0.15,
+    0.6, 0, -0.15,
+    0.6, -0.3, 0.15,
+    0.6, -0.3, -0.15,
     //Sides 2st
     //Left 594-611
-    0 , bs, 0,
-    0 , 2 * bs, 0,
-    0 , bs, bs,
-    0 , bs, bs,
-    0 , 2 * bs, 0,
-    0 , 2 * bs, bs,
+    -0.6, -0.3, 0.15,
+    -0.6, -0.6, 0.15,
+    -0.6, -0.3, -0.15,
+    -0.6, -0.3, -0.15,
+    -0.6, -0.6, 0.15,
+    -0.6, -0.6, -0.15,
     //1st-2nd 612-629
-    bs , bs, 0,
-    bs , 2 * bs, 0,
-    bs , bs, bs,
-    bs , bs, bs,
-    bs , 2 * bs, 0,
-    bs , 2 * bs, bs,
+    -0.3, -0.3, 0.15,
+    -0.3, -0.6, 0.15,
+    -0.3, -0.3, -0.15,
+    -0.3, -0.3, -0.15,
+    -0.3, -0.6, 0.15,
+    -0.3, -0.6, -0.15, 
     //2nd-3rd 630-647
-    2 * bs , bs, 0,
-    2 * bs , 2 * bs, 0,
-    2 * bs , bs, bs,
-    2 * bs , bs, bs,
-    2 * bs , 2 * bs, 0,
-    2 * bs , 2 * bs, bs,
+    0, -0.3, 0.15,
+    0, -0.6, 0.15,
+    0, -0.3, -0.15,
+    0, -0.3, -0.15,
+    0, -0.6, 0.15,
+    0, -0.6, -0.15,
     //3rd-4th 648-665
-    3 * bs , bs, 0,
-    3 * bs , 2 * bs, 0,
-    3 * bs , bs, bs,
-    3 * bs , bs, bs,
-    3 * bs , 2 * bs, 0,
-    3 * bs , 2 * bs, bs,
+    0.3, -0.3, 0.15,
+    0.3, -0.6, 0.15,
+    0.3, -0.3, -0.15,
+    0.3, -0.3, -0.15,
+    0.3, -0.6, 0.15,
+    0.3, -0.6, -0.15,
     //right 666-683
-    4 * bs , bs, 0,
-    4 * bs , 2 * bs, 0,
-    4 * bs , bs, bs,
-    4 * bs , bs, bs,
-    4 * bs , 2 * bs, 0,
-    4 * bs , 2 * bs, bs
+    0.6, -0.3, 0.15,
+    0.6, -0.6, 0.15,
+    0.6, -0.3, -0.15,
+    0.6, -0.3, -0.15,
+    0.6, -0.6, 0.15,
+    0.6, -0.6, -0.15,
 ];
 //            _ _ _ _
 // Tetromino [_|_|_|_] Vertices
@@ -1245,12 +1280,12 @@ function grid() {
                 0, 0, 1, 1,
                 0, 0, 1, 1,
                 0, 0, 1, 1,
-                j * bs, i * bs, 0,  //Vertices 24-41
-                (j + 1) * bs, i * bs, 0,
-                j * bs, (i + 1) * bs, 0,
-                j * bs, (i + 1) * bs, 0,
-                (j + 1) * bs, i * bs, 0,
-                (j + 1) * bs, (i + 1) * bs, 0,
+                j * bs + 500, i * bs, 0,  //Vertices 24-41
+                (j + 1) * bs + 500, i * bs, 0.15,
+                j * bs + 500, (i + 1) * bs, 0.15,
+                j * bs + 500, (i + 1) * bs, 0.15,
+                (j + 1) * bs + 500, i * bs, 0.15,
+                (j + 1) * bs + 500, (i + 1) * bs, 0.15,
                 false //availibility 42
             ];
 
